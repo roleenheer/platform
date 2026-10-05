@@ -367,7 +367,7 @@ export class CPageRequest {
 
   private getSourceFor<const Type extends keyof WHFSTypes | string & {}>(type: string extends Type ? Type : WHFSTypeName): "target" | "content" {
     const typeinfo = getType(type);
-    return typeinfo?.workflow ? "content" : "target";
+    return typeinfo?.workflow && !typeinfo?.contentlink ? "content" : "target";
   }
 
   /** Get data for a whfsType. Considers versioning and contentlinks to ensure the right version is picked

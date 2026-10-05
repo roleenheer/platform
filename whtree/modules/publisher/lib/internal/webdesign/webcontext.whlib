@@ -165,18 +165,15 @@ PUBLIC STATIC OBJECTTYPE WebContext <
     RETURN pluginobj;
   }
 
+  STRING FUNCTION GetSourceFor(STRING ns) {
+    RECORD typeinfo := SELECT * FROM this->pvt_contentinstances WHERE namespace = VAR ns OR scopedtype = VAR ns;
+    RETURN RecordExists(typeinfo) AND typeinfo.workflow AND NOT typeinfo.contentlink ? "content" : "target";
+  }
+
   /** Get instance data from the relevant content/target object. Added since WH5.8.2 and should generally be used over this->contentobject/targetobject->GetInstanceData() */
   PUBLIC RECORD FUNCTION GetInstanceData(STRING ns) {
-    IF(this->pvt_historic_contentobject) {
-      RECORD typeinfo := SELECT * FROM this->pvt_contentinstances WHERE namespace = VAR ns OR scopedtype = VAR ns;
-      //Workflowed instances come from the draft
-      IF(RecordExists(typeinfo) AND typeinfo.workflow)
-        RETURN this->contentobject->GetInstanceData(ns);
-      ELSE
-        RETURN this->targetobject->GetInstanceData(ns);
-    }
-
-    RETURN (this->contentobject ?? this->targetobject ?? this->targetfolder)->GetInstanceData(ns);
+    OBJECT source := this->GetSourceFor(ns) = "target" ? this->targetobject : this->contentobject;
+    RETURN source->GetInstanceData(ns);
   }
 
   PUBLIC OBJECT ARRAY FUNCTION GetPluginsByFeature(STRING featurename)
